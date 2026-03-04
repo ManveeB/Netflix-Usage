@@ -1,8 +1,8 @@
 import { format } from "date-fns";
-import type { UsageSession } from "@shared/schema";
+import type { UsageSession } from "../shared/schema.ts"; // Changed @shared to ../shared
 import { Trash2, Clock, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useDeleteSession } from "@/hooks/use-usage";
+import { Button } from "./button.tsx"; // Changed @/components/ui/ to ./ (same folder)
+import { useDeleteSession } from "../hooks/use-usage.ts"; // Changed @/hooks/ to ../hooks/
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SessionListProps {

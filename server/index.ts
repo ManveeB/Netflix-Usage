@@ -1,17 +1,25 @@
 import express from "express";
-import { registerChatRoutes } from "./routes.ts"; // Added .ts for consistency
+import path from "path"; // 1. Add this import
+import { fileURLToPath } from "url"; // 2. Add this for ESM support
+import { registerChatRoutes } from "./routes.ts";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
 
-// Register your routes
+// Register your API routes first
 registerChatRoutes(app);
 
-const PORT = Number(process.env.PORT) || 10000;
+// 3. Add this block to serve the React frontend
+const publicPath = path.join(__dirname, "public"); 
+app.use(express.static(publicPath));
 
-// We use 'app.listen' directly to avoid the 'undefined' error
+// Ensure any non-API request serves the index.html (for React routing)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(publicPath, "index.html"));
+});
+
+const PORT = Number(process.env.PORT) || 10000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-export { registerChatRoutes };

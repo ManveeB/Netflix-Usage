@@ -1,18 +1,18 @@
 import { useMemo, useState } from "react";
-import { useUsageSessions, useGenerateSession, useCreateSession } from "@/hooks/use-usage";
-import { UsageChart } from "@/components/UsageChart";
-import { SessionList } from "@/components/SessionList";
-import { StatCard } from "@/components/StatCard";
-import { Button } from "@/components/ui/button";
+import { useUsageSessions, useGenerateSession, useCreateSession } from "../hooks/use-usage";
+import { UsageChart } from "../components/UsageChart";
+import { SessionList } from "../components/SessionList";
+import { StatCard } from "../components/StatCard";
+import { Button } from "../components/ui/button";
 import { Clock, Tv, AlertCircle, RefreshCw, BarChart3, Film, Plus, Calendar as CalendarIcon } from "lucide-react";
 import { motion } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "../components/ui/dialog";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Calendar } from "../components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
 export default function Dashboard() {
   const { data: sessions = [], isLoading, isError } = useUsageSessions();

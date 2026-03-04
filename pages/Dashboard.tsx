@@ -13,3 +13,7 @@ import { Calendar } from "../components/calendar.tsx"; // Removed /ui/ and added
 import { Popover, PopoverContent, PopoverTrigger } from "../components/popover.tsx"; // Removed /ui/ and added .tsx
 import { format } from "date-fns";
 import { cn } from "../lib/utils.ts"; // Added .ts
+// Add "default" right here:
+export default function Dashboard() { 
+  const { data: sessions = [], isLoading, isError } = useUsageSessions();
+  // ... the rest of your code

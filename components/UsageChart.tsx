@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
 import { format, startOfDay, eachDayOfInterval, subDays, isSameDay } from "date-fns";
-import type { UsageSession } from "@shared/schema";
+import type { UsageSession } from "../shared/schema.ts"; // Changed @shared to ../shared and added .ts
 import { motion } from "framer-motion";
 
 interface UsageChartProps {

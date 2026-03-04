@@ -1,8 +1,8 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "./components/ui/toaster.tsx"; 
-import { TooltipProvider } from "./components/ui/tooltip.tsx"; 
+import { Toaster } from "./components/toaster.tsx"; // Removed /ui/
+import { TooltipProvider } from "./components/tooltip.tsx"; // Removed /ui/
 import Dashboard from "./pages/Dashboard.tsx"; 
 import NotFound from "./pages/not-found.tsx"; 
 

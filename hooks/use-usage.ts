@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl } from "@shared/routes";
-import { useToast } from "@/hooks/use-toast";
+import { api, buildUrl } from "../shared/routes.ts"; // Changed @shared to ../shared
+import { useToast } from "./use-toast.ts"; // Changed @/hooks/ to ./ since it's the same folder
 
 // Fetch usage history
 export function useUsageSessions() {

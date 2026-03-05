@@ -15,7 +15,8 @@ const publicPath = path.join(__dirname, "public");
 app.use(express.static(publicPath));
 
 // Ensure any non-API request serves the index.html (for React routing)
-app.get(/^(?!\/api).+/, (req, res) => {
+// Replace your catch-all at the bottom of server/index.ts
+app.get("/{*splat}", (req, res) => {
   res.sendFile(path.join(publicPath, "index.html"));
 });
 

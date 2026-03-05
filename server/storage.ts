@@ -1,45 +1,16 @@
 import { type Session, type InsertSession } from "../shared/schema";
 
+// 1. The Interface (The "Rules" - No actual code allowed here)
 export interface IStorage {
-  constructor() {
-    this.conversations = new Map();
-    this.messages = new Map();
-    this.currentId = 1;
-
-    // FIX 1: Seed the storage so the frontend doesn't see "null" or "empty"
-    this.createConversation("Welcome to your Netflix Tracker");
-  }
-
-  async getAllConversations() { 
-    const data = Array.from(this.conversations.values());
-    // FIX 2: Most templates expect the array itself, 
-    // but some expect { sessions: data }. 
-    // Let's start by ensuring it returns a clean array.
-    return data; 
-  }
-  export class MemStorage implements IStorage {
-  private conversations: Map<number, any>;
-  private messages: Map<number, any[]>;
-  private currentId: number;
-
-  constructor() {
-    this.conversations = new Map();
-    this.messages = new Map();
-    this.currentId = 1;
-
-    // ADD THIS: Seed the storage with one entry so the dashboard isn't empty
-    this.createConversation("Netflix Usage Analysis - Main Dashboard");
-  }
-
-  async getAllConversations() { 
-    // This ensures the frontend gets an array of data immediately
-    return Array.from(this.conversations.values());
-  }
-  
-  // ... (keep the rest of your methods as they are)
-}
+  getConversation(id: number): Promise<any>;
+  getAllConversations(): Promise<any>;
+  getMessagesByConversation(id: number): Promise<any[]>;
+  createConversation(title: string): Promise<any>;
+  createMessage(convId: number, role: string, content: string): Promise<any>;
+  deleteConversation(id: number): Promise<void>;
 }
 
+// 2. The Class (The "Logic" - This is where the constructor goes)
 export class MemStorage implements IStorage {
   private conversations: Map<number, any>;
   private messages: Map<number, any[]>;
@@ -49,11 +20,22 @@ export class MemStorage implements IStorage {
     this.conversations = new Map();
     this.messages = new Map();
     this.currentId = 1;
+
+    // This "seeds" the data so the dashboard isn't blank on load
+    this.createConversation("Netflix Usage Analysis - Main Dashboard");
   }
 
-  async getAllConversations() { return Array.from(this.conversations.values()); }
-  async getConversation(id: number) { return this.conversations.get(id); }
-  async getMessagesByConversation(id: number) { return this.messages.get(id) || []; }
+  async getAllConversations() { 
+    return Array.from(this.conversations.values()); 
+  }
+
+  async getConversation(id: number) { 
+    return this.conversations.get(id); 
+  }
+
+  async getMessagesByConversation(id: number) { 
+    return this.messages.get(id) || []; 
+  }
 
   async createConversation(title: string) {
     const id = this.currentId++;
@@ -70,7 +52,9 @@ export class MemStorage implements IStorage {
     return newMsg;
   }
 
-  async deleteConversation(id: number) { this.conversations.delete(id); }
+  async deleteConversation(id: number) { 
+    this.conversations.delete(id); 
+  }
 }
 
 export const chatStorage = new MemStorage();

@@ -7,24 +7,27 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
 
-// 1. Register API routes FIRST
+// 1. API Routes must come first
 registerChatRoutes(app);
 
-// 2. Define publicPath ONLY ONCE
-const publicPath = path.resolve(__dirname, "public");
+// 2. Try to find the dashboard in any possible folder
 const distPath = path.resolve(__dirname);
+const publicPath = path.resolve(__dirname, "public");
 
-// 3. Serve static files from both potential locations
 app.use(express.static(publicPath));
 app.use(express.static(distPath));
 
-// 4. Catch-all route for React routing (Express 5 syntax)
+// 3. The "Smart" Catch-All
 app.get("/{*splat}", (req, res) => {
-  const file = path.join(publicPath, "index.html");
-  res.sendFile(file, (err) => {
+  // Try /public/index.html first
+  res.sendFile(path.join(publicPath, "index.html"), (err) => {
     if (err) {
-      // If not in /public, try the root dist folder
-      res.sendFile(path.join(distPath, "index.html"));
+      // If that fails, try /index.html in the root
+      res.sendFile(path.join(distPath, "index.html"), (err2) => {
+        if (err2) {
+          res.status(404).send("Dashboard files not found. Check build logs.");
+        }
+      });
     }
   });
 });

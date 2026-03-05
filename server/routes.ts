@@ -2,7 +2,6 @@ import type { Express, Request, Response } from "express";
 import Anthropic from "@anthropic-ai/sdk";
 import { chatStorage } from "./storage";
 
-// Wrap this in a check so it doesn't crash if the key is missing
 const anthropic = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY 
   ? new Anthropic({
       apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
@@ -14,36 +13,30 @@ export function registerChatRoutes(app: Express): void {
   const sendData = async (res: Response) => {
     try {
       const data = await chatStorage.getAllConversations();
-      // WE SEND BOTH FORMATS: This satisfies every possible React template
+      // WE SEND BOTH: Array and Object-wrapped to satisfy any template
       res.json({ sessions: data, conversations: data, data: data }); 
     } catch (error) {
+      console.error("Data fetch error:", error);
       res.status(500).json({ error: "Data fetch failed" });
     }
   };
 
-  // Map every name the frontend could possibly be looking for
+  // Map all possible GET endpoints
   app.get("/api/sessions", (req, res) => sendData(res));
   app.get("/api/conversations", (req, res) => sendData(res));
   app.get("/api/usage", (req, res) => sendData(res));
-  app.get("/api/chat", async (req, res) => sendData(res));
 
   // Get single conversation with messages
- // Get all data - many templates use /api/sessions instead of /api/conversations
-  app.get("/api/sessions", async (req: Request, res: Response) => {
+  app.get("/api/conversations/:id", async (req: Request, res: Response) => {
     try {
-      const data = await chatStorage.getAllConversations();
-      // Ensure the return matches the expected object structure
-      res.json(data); 
+      const id = parseInt(req.params.id);
+      const conversation = await chatStorage.getConversation(id);
+      if (!conversation) return res.status(404).json({ error: "Not found" });
+      const messages = await chatStorage.getMessagesByConversation(id);
+      res.json({ ...conversation, messages });
     } catch (error) {
-      console.error("Error fetching sessions:", error);
-      res.status(500).json({ error: "Failed to fetch data" });
+      res.status(500).json({ error: "Failed to fetch conversation" });
     }
-  });
-
-  // Keep this as a duplicate just in case the app uses both names
-  app.get("/api/conversations", async (req: Request, res: Response) => {
-    const data = await chatStorage.getAllConversations();
-    res.json(data);
   });
 
   // Create new conversation
@@ -53,7 +46,6 @@ export function registerChatRoutes(app: Express): void {
       const conversation = await chatStorage.createConversation(title || "New Chat");
       res.status(201).json(conversation);
     } catch (error) {
-      console.error("Error creating conversation:", error);
       res.status(500).json({ error: "Failed to create conversation" });
     }
   });
@@ -65,66 +57,36 @@ export function registerChatRoutes(app: Express): void {
       await chatStorage.deleteConversation(id);
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting conversation:", error);
       res.status(500).json({ error: "Failed to delete conversation" });
     }
   });
 
-  // Send message and get AI response (streaming)
+  // Send message and get AI response
   app.post("/api/conversations/:id/messages", async (req: Request, res: Response) => {
     try {
+      if (!anthropic) return res.status(500).json({ error: "AI not configured" });
+      
       const conversationId = parseInt(req.params.id);
       const { content } = req.body;
-
-      // Save user message
       await chatStorage.createMessage(conversationId, "user", content);
 
-      // Get conversation history for context
       const messages = await chatStorage.getMessagesByConversation(conversationId);
       const chatMessages = messages.map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
       }));
 
-      // Set up SSE
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
       res.setHeader("Connection", "keep-alive");
 
-      // Stream response from Anthropic
       const stream = anthropic.messages.stream({
-        model: "claude-sonnet-4-5",
+        model: "claude-3-5-sonnet-20240620",
         max_tokens: 8192,
         messages: chatMessages,
       });
 
       let fullResponse = "";
-
       for await (const event of stream) {
         if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-          const content = event.delta.text;
-          if (content) {
-            fullResponse += content;
-            res.write(`data: ${JSON.stringify({ content })}\n\n`);
-          }
-        }
-      }
-
-      // Save assistant message
-      await chatStorage.createMessage(conversationId, "assistant", fullResponse);
-
-      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-      res.end();
-    } catch (error) {
-      console.error("Error sending message:", error);
-      // Check if headers already sent (SSE streaming started)
-      if (res.headersSent) {
-        res.write(`data: ${JSON.stringify({ error: "Failed to send message" })}\n\n`);
-        res.end();
-      } else {
-        res.status(500).json({ error: "Failed to send message" });
-      }
-    }
-  });
-}
-
+          const text = event.delta.text;

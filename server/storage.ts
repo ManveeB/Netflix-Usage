@@ -17,10 +17,27 @@ export interface IStorage {
     // Let's start by ensuring it returns a clean array.
     return data; 
   }
-  getMessagesByConversation(id: number): Promise<any[]>;
-  createConversation(title: string): Promise<any>;
-  createMessage(convId: number, role: string, content: string): Promise<any>;
-  deleteConversation(id: number): Promise<void>;
+  export class MemStorage implements IStorage {
+  private conversations: Map<number, any>;
+  private messages: Map<number, any[]>;
+  private currentId: number;
+
+  constructor() {
+    this.conversations = new Map();
+    this.messages = new Map();
+    this.currentId = 1;
+
+    // ADD THIS: Seed the storage with one entry so the dashboard isn't empty
+    this.createConversation("Netflix Usage Analysis - Main Dashboard");
+  }
+
+  async getAllConversations() { 
+    // This ensures the frontend gets an array of data immediately
+    return Array.from(this.conversations.values());
+  }
+  
+  // ... (keep the rest of your methods as they are)
+}
 }
 
 export class MemStorage implements IStorage {

@@ -1,43 +1,29 @@
-import { db } from "./db.ts"; 
-import { sessions } from "../shared/schema.ts";
-import { eq, desc } from "drizzle-orm";
+import { sessions, type Session, type InsertSession } from "../shared/schema.ts";
 
-export interface IChatStorage {
-  getConversation(id: number): Promise<typeof conversations.$inferSelect | undefined>;
-  getAllConversations(): Promise<(typeof conversations.$inferSelect)[]>;
-  createConversation(title: string): Promise<typeof conversations.$inferSelect>;
-  deleteConversation(id: number): Promise<void>;
-  getMessagesByConversation(conversationId: number): Promise<(typeof messages.$inferSelect)[]>;
-  createMessage(conversationId: number, role: string, content: string): Promise<typeof messages.$inferSelect>;
+export interface IStorage {
+  getSessions(): Promise<Session[]>;
+  createSession(session: InsertSession): Promise<Session>;
 }
 
-export const chatStorage: IChatStorage = {
-  async getConversation(id: number) {
-    const [conversation] = await db.select().from(conversations).where(eq(conversations.id, id));
-    return conversation;
-  },
+export class MemStorage implements IStorage {
+  private sessions: Map<number, Session>;
+  private currentId: number;
 
-  async getAllConversations() {
-    return db.select().from(conversations).orderBy(desc(conversations.createdAt));
-  },
+  constructor() {
+    this.sessions = new Map();
+    this.currentId = 1;
+  }
 
-  async createConversation(title: string) {
-    const [conversation] = await db.insert(conversations).values({ title }).returning();
-    return conversation;
-  },
+  async getSessions(): Promise<Session[]> {
+    return Array.from(this.sessions.values());
+  }
 
-  async deleteConversation(id: number) {
-    await db.delete(messages).where(eq(messages.conversationId, id));
-    await db.delete(conversations).where(eq(conversations.id, id));
-  },
+  async createSession(insertSession: InsertSession): Promise<Session> {
+    const id = this.currentId++;
+    const session: Session = { ...insertSession, id };
+    this.sessions.set(id, session);
+    return session;
+  }
+}
 
-  async getMessagesByConversation(conversationId: number) {
-    return db.select().from(messages).where(eq(messages.conversationId, conversationId)).orderBy(messages.createdAt);
-  },
-
-  async createMessage(conversationId: number, role: string, content: string) {
-    const [message] = await db.insert(messages).values({ conversationId, role, content }).returning();
-    return message;
-  },
-};
-
+export const storage = new MemStorage();

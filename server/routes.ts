@@ -23,19 +23,22 @@ export function registerChatRoutes(app: Express): void {
   });
 
   // Get single conversation with messages
-  app.get("/api/conversations/:id", async (req: Request, res: Response) => {
+ // Get all data - many templates use /api/sessions instead of /api/conversations
+  app.get("/api/sessions", async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      const conversation = await chatStorage.getConversation(id);
-      if (!conversation) {
-        return res.status(404).json({ error: "Conversation not found" });
-      }
-      const messages = await chatStorage.getMessagesByConversation(id);
-      res.json({ ...conversation, messages });
+      const data = await chatStorage.getAllConversations();
+      // Ensure the return matches the expected object structure
+      res.json(data); 
     } catch (error) {
-      console.error("Error fetching conversation:", error);
-      res.status(500).json({ error: "Failed to fetch conversation" });
+      console.error("Error fetching sessions:", error);
+      res.status(500).json({ error: "Failed to fetch data" });
     }
+  });
+
+  // Keep this as a duplicate just in case the app uses both names
+  app.get("/api/conversations", async (req: Request, res: Response) => {
+    const data = await chatStorage.getAllConversations();
+    res.json(data);
   });
 
   // Create new conversation

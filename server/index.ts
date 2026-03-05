@@ -24,3 +24,18 @@ const PORT = Number(process.env.PORT) || 10000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Replace these two lines in server/index.ts
+const publicPath = path.resolve(__dirname, "public");
+const fallbackPath = path.resolve(__dirname);
+
+app.use(express.static(publicPath));
+app.use(express.static(fallbackPath)); // Backup if "public" doesn't exist
+
+app.get("/{*splat}", (req, res) => {
+  // Try to send from public first, then root dist
+  const file = path.join(publicPath, "index.html");
+  res.sendFile(file, (err) => {
+    if (err) res.sendFile(path.join(fallbackPath, "index.html"));
+  });
+});

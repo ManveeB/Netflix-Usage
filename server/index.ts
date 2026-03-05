@@ -15,7 +15,7 @@ const publicPath = path.join(__dirname, "public");
 app.use(express.static(publicPath));
 
 // Ensure any non-API request serves the index.html (for React routing)
-app.get("/(.*)", (req, res) => { // Updated for Express 5 naming requirements
+app.get("*", (req, res) => {
   res.sendFile(path.join(publicPath, "index.html"));
 });
 

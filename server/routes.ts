@@ -23,7 +23,6 @@ export function registerChatRoutes(app: Express): void {
   app.get("/api/conversations", async (req, res) => sendData(res));
   app.get("/api/usage", async (req, res) => sendData(res));
   app.get("/api/chat", async (req, res) => sendData(res));
-};
 
   // Get single conversation with messages
  // Get all data - many templates use /api/sessions instead of /api/conversations

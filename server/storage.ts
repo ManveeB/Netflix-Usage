@@ -1,8 +1,22 @@
 import { type Session, type InsertSession } from "../shared/schema";
 
 export interface IStorage {
-  getConversation(id: number): Promise<any>;
-  getAllConversations(): Promise<any[]>;
+  constructor() {
+    this.conversations = new Map();
+    this.messages = new Map();
+    this.currentId = 1;
+
+    // FIX 1: Seed the storage so the frontend doesn't see "null" or "empty"
+    this.createConversation("Welcome to your Netflix Tracker");
+  }
+
+  async getAllConversations() { 
+    const data = Array.from(this.conversations.values());
+    // FIX 2: Most templates expect the array itself, 
+    // but some expect { sessions: data }. 
+    // Let's start by ensuring it returns a clean array.
+    return data; 
+  }
   getMessagesByConversation(id: number): Promise<any[]>;
   createConversation(title: string): Promise<any>;
   createMessage(convId: number, role: string, content: string): Promise<any>;

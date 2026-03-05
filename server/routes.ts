@@ -11,17 +11,20 @@ const anthropic = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY
   : null;
 
 export function registerChatRoutes(app: Express): void {
-  // Use a helper to send data in both formats (array and object-wrapped)
   const sendData = async (res: Response) => {
-    const data = await chatStorage.getAllConversations();
-    // We send back both the array AND the object wrapper to satisfy any React template
-    res.json(data); 
+    try {
+      const data = await chatStorage.getAllConversations();
+      // WE SEND BOTH FORMATS: This satisfies every possible React template
+      res.json({ sessions: data, conversations: data, data: data }); 
+    } catch (error) {
+      res.status(500).json({ error: "Data fetch failed" });
+    }
   };
 
-  // Map every possible endpoint the frontend might be calling
-  app.get("/api/sessions", async (req, res) => sendData(res));
-  app.get("/api/conversations", async (req, res) => sendData(res));
-  app.get("/api/usage", async (req, res) => sendData(res));
+  // Map every name the frontend could possibly be looking for
+  app.get("/api/sessions", (req, res) => sendData(res));
+  app.get("/api/conversations", (req, res) => sendData(res));
+  app.get("/api/usage", (req, res) => sendData(res));
   app.get("/api/chat", async (req, res) => sendData(res));
 
   // Get single conversation with messages

@@ -1,41 +1,35 @@
 import express from "express";
-import path from "path"; // 1. Add this import
-import { fileURLToPath } from "url"; // 2. Add this for ESM support
+import path from "path";
+import { fileURLToPath } from "url";
 import { registerChatRoutes } from "./routes.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
 
-// Register your API routes first
+// 1. Register API routes FIRST
 registerChatRoutes(app);
 
-// 3. Add this block to serve the React frontend
-const publicPath = path.join(__dirname, "public"); 
-app.use(express.static(publicPath));
+// 2. Define publicPath ONLY ONCE
+const publicPath = path.resolve(__dirname, "public");
+const distPath = path.resolve(__dirname);
 
-// Ensure any non-API request serves the index.html (for React routing)
-// Replace your catch-all at the bottom of server/index.ts
+// 3. Serve static files from both potential locations
+app.use(express.static(publicPath));
+app.use(express.static(distPath));
+
+// 4. Catch-all route for React routing (Express 5 syntax)
 app.get("/{*splat}", (req, res) => {
-  res.sendFile(path.join(publicPath, "index.html"));
+  const file = path.join(publicPath, "index.html");
+  res.sendFile(file, (err) => {
+    if (err) {
+      // If not in /public, try the root dist folder
+      res.sendFile(path.join(distPath, "index.html"));
+    }
+  });
 });
 
 const PORT = Number(process.env.PORT) || 10000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
-});
-
-// Replace these two lines in server/index.ts
-const publicPath = path.resolve(__dirname, "public");
-const fallbackPath = path.resolve(__dirname);
-
-app.use(express.static(publicPath));
-app.use(express.static(fallbackPath)); // Backup if "public" doesn't exist
-
-app.get("/{*splat}", (req, res) => {
-  // Try to send from public first, then root dist
-  const file = path.join(publicPath, "index.html");
-  res.sendFile(file, (err) => {
-    if (err) res.sendFile(path.join(fallbackPath, "index.html"));
-  });
 });

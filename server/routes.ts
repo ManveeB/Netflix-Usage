@@ -2,10 +2,13 @@ import type { Express, Request, Response } from "express";
 import Anthropic from "@anthropic-ai/sdk";
 import { chatStorage } from "./storage";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL,
-});
+// Wrap this in a check so it doesn't crash if the key is missing
+const anthropic = process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY 
+  ? new Anthropic({
+      apiKey: process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY,
+      baseURL: process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL,
+    })
+  : null;
 
 export function registerChatRoutes(app: Express): void {
   // Get all conversations
